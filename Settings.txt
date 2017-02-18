@@ -1,0 +1,24 @@
+[Diary]
+DiaryFilename=Dagbok.xlsx
+DiarySheetPrefix=Dagbok
+TimecodeSheetName=Timecodes
+StartColumn=Start
+EndColumn=Slut
+TotalHoursColumn=Arbetade h
+ChargedHoursColumn=Debiterade h
+DateColumn=Datum
+
+[Export]
+FileName=Week
+
+[ProcessingPrompt]
+Message=Extracting workbook into txt files. This may take a short while...
+
+[OpenTimeReportingUrl]
+Active=True
+PromptTitle=Peter's Diary converter
+PromptMessage=Diary has been converted to txt files with the desired format and is ready to be imported to the target destination! Would you like to open your time reporting url in internet explorer now?
+TimeReportingUrl=https://mycompany.intranet.com/timereporting
+
+[Logging]
+Active=False
