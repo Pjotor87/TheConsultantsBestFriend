@@ -192,9 +192,9 @@ def build_DiaryEntry_objects_from_excel_file(excel_filepath):
 
     return diary_entries_for_all_years
 
-def write_csv_file_foreach_week_in_diary(diary_entries):
+def write_txt_file_foreach_week_in_diary(diary_entries):
     logging.debug('Inside write_csv_file_foreach_week_in_diary()')
-    def write_csv_file(items, filename):
+    def write_txt_file(items, filename):
         # Create the diary content
         diary_content = ""
         for current_weeks_item in items:
@@ -240,10 +240,10 @@ def write_csv_file_foreach_week_in_diary(diary_entries):
                     else:
                         raise Exception("Unexpected error when parsing months from date string")
             if not b_month:        
-                write_csv_file(a_entries_for_week, "{0}/{1}-{2}.txt".format(year_key, settings.get('Export', 'FileName'), week))
+                write_txt_file(a_entries_for_week, "{0}/{1}-{2}.txt".format(year_key, settings.get('Export', 'FileName'), week))
             else:
-                write_csv_file(a_entries_for_week, "{0}/{1}-{2}A.txt".format(year_key, settings.get('Export', 'FileName'), week))
-                write_csv_file(b_entries_for_week, "{0}/{1}-{2}B.txt".format(year_key, settings.get('Export', 'FileName'), week))
+                write_txt_file(a_entries_for_week, "{0}/{1}-{2}A.txt".format(year_key, settings.get('Export', 'FileName'), week))
+                write_txt_file(b_entries_for_week, "{0}/{1}-{2}B.txt".format(year_key, settings.get('Export', 'FileName'), week))
 
 root = Tk()
 def worker():
@@ -254,14 +254,13 @@ def worker():
     root.mainloop()
 
 def main():
-    # TODO: Import settings here and remove all hardcoded values
     threading.Thread(target=worker).start()
     ### 1 Open excel file. 
     ### 2 Extract excel data to the model (The DiaryEntry and Timecode classes).
     ### 3 Compile csv files into the folder for the current year.
     ##### Create one file for each week of the current year and let the file data 
-    ##### adhere to the specific format that MyTime needs for them to be imported.
-    write_csv_file_foreach_week_in_diary(build_DiaryEntry_objects_from_excel_file(settings.get('Diary', 'DiaryFilename')))
+    ##### adhere to the specific format that the company time reporting system needs for them to be imported.
+    write_txt_file_foreach_week_in_diary(build_DiaryEntry_objects_from_excel_file(settings.get('Diary', 'DiaryFilename')))
     try:
         logging.debug('Destroying worker...')
         root.destroy()
