@@ -9,6 +9,8 @@ rmdir "%~dp0\dist" /S /Q
 del "%~dp0\dist\convertdagboktotxt.exe"
 del "%~dp0\convertdagboktotxt.exe"
 del "%~dp0\convertdagboktotxt.spec"
+del "%~dp0\.convertdagboktotxt.py.un~"
+del "%~dp0\convertdagboktotxt.py~"
 
 echo.
 echo Closing in

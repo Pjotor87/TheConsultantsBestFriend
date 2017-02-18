@@ -193,7 +193,7 @@ def build_DiaryEntry_objects_from_excel_file(excel_filepath):
     return diary_entries_for_all_years
 
 def write_txt_file_foreach_week_in_diary(diary_entries):
-    logging.debug('Inside write_csv_file_foreach_week_in_diary()')
+    logging.debug('Inside write_txt_file_foreach_week_in_diary()')
     def write_txt_file(items, filename):
         # Create the diary content
         diary_content = ""
@@ -202,7 +202,7 @@ def write_txt_file_foreach_week_in_diary(diary_entries):
                 diary_content += str(current_weeks_item)
                 diary_content += "\n"
         diary_content = diary_content.rstrip('\n')
-        print("Content being applied to csv template:\n{0}".format(diary_content))
+        print("Content being applied to txt template:\n{0}".format(diary_content))
         # Get the template for the file and inject the diary content
         raise NotImplementedError("Check the file_content string below and apply how the file for each week should be printed to the each file.")
         file_content = (
@@ -257,7 +257,7 @@ def main():
     threading.Thread(target=worker).start()
     ### 1 Open excel file. 
     ### 2 Extract excel data to the model (The DiaryEntry and Timecode classes).
-    ### 3 Compile csv files into the folder for the current year.
+    ### 3 Compile txt files into the folder for the current year.
     ##### Create one file for each week of the current year and let the file data 
     ##### adhere to the specific format that the company time reporting system needs for them to be imported.
     write_txt_file_foreach_week_in_diary(build_DiaryEntry_objects_from_excel_file(settings.get('Diary', 'DiaryFilename')))
