@@ -27,33 +27,38 @@ import ctypes
 logging.debug('Finished importing modules.')
 
 class DiaryEntry(object):
-    def __init__(self, datum, faktiskt_datum, faktisk_start, faktiskt_slut, faktiskt_arbetadeH, vecka, start, slut, timecode_nyckel, isdeb, kvar, h, m, arbetadeH, debiteradeH, aktivitet, tag, beskrivning):
+    def __init__(self, datum, vecka, start, slut, timecode_nyckel, aktivitet, arbetadeH):
         self.set_year("")
+        self.set_timecode(None)
+        
         self.Datum = datum
-        self.Faktiskt_datum = faktiskt_datum
-        self.Faktisk_start = faktisk_start
-        self.Faktiskt_slut = faktiskt_slut
-        self.Faktiskt_arbetadeH = faktiskt_arbetadeH
         self.Vecka = vecka.split('.')[0]
         self.Start = start
         self.Slut = slut
         self.Timecode_nyckel = timecode_nyckel
-        self.Isdeb = (isdeb.lower() == "x")
-        self.Kvar = kvar
-        self.H = h
-        self.M = m
-        self.ArbetadeH = arbetadeH
-        self.DebiteradeH = debiteradeH
         self.Aktivitet = aktivitet
-        self.Tag = tag
-        self.Beskrivning = beskrivning
-        self.set_timecode(None)
+        self.ArbetadeH = arbetadeH
 
     def set_year(self, year):
         self.Year = year
     def set_timecode(self, timecode):
         self.Timecode = timecode
-    
+    def set_faktiskt_datum(self, faktiskt_datum, faktisk_start, faktiskt_slut, faktiskt_arbetadeH):
+        self.Faktiskt_datum = faktiskt_datum
+        self.Faktisk_start = faktisk_start
+        self.Faktiskt_slut = faktiskt_slut
+        self.Faktiskt_arbetadeH = faktiskt_arbetadeH
+    def set_deb(self, isdeb, debiteradeH):
+        self.Isdeb = (isdeb.lower() == "x")
+        self.DebiteradeH = debiteradeH
+    def set_calculations(self, kvar, h, m):
+        self.Kvar = kvar
+        self.H = h
+        self.M = m
+    def set_descriptions(self, tag, beskrivning):
+        self.Tag = tag
+        self.Beskrivning = beskrivning
+
     def IsValid(self):
         return (self.Datum and self.Vecka and self.Start and self.Slut and self.Timecode_nyckel and self.ArbetadeH and self.Aktivitet)
 
@@ -61,16 +66,17 @@ class DiaryEntry(object):
         raise NotImplementedError('Need to implement this method. The return value should be a string that displays the activity. Either in some importable format in your time reporting system or something easy to read if time is to be reported manually.')
 
 class Timecode(object):
-    def __init__(self, key, timecode, task, timecode_type, customer, time_Available, time_Spent, time_Spent_2016, time_Spent_2017):
+    def __init__(self, key, timecode, task, timecode_type):
         self.Key = key
         self.Timecode = timecode
         self.Task = task
         self.Timecode_type = timecode_type
+
+    def set_customer(self, customer):
         self.Customer = customer
+    def set_time(self, time_Available, time_Spent):
         self.Time_Available = time_Available
         self.Time_Spent = time_Spent
-        self.Time_Spent_2016 = time_Spent_2016
-        self.Time_Spent_2017 = time_Spent_2017
 
     def __str__(self):
         raise NotImplementedError('Need to implement this method. The return value should be a string that displays the timecode. Either in some importable format in your time reporting system or something easy to read if time is to be reported manually. The method can be called in the function: DiaryEntry.__str__().')
@@ -116,16 +122,22 @@ def build_DiaryEntry_objects_from_excel_file(excel_filepath):
     # Get index positions from headers list
     def get_indexes_from_list(list_to_lookup, values):
         indexes = []
-        for i in range(0, len(list_to_lookup)):
-            if list_to_lookup[i] in values:
-                indexes.append(i)
+        for value in values:
+            value_found = False
+            for i in range(0, len(list_to_lookup)):
+                if list_to_lookup[i] == value:
+                    value_found = True
+                    indexes.append(i)
+            if not value_found:
+                indexes.append(None)
+                logging.debug("Value not found: {0}".format(value))
         return indexes
 
     # Filter the raw data depending on excel cell format and ultimately add it to a new list
     ##### Diary entries
     def get_parsed_diary_entries(diary_entries, diary_headers):
-        time_column_indexes = get_indexes_from_list(diary_headers, [settings.get('Diary', 'StartColumn'), settings.get('Diary', 'EndColumn'), settings.get('Diary', 'TotalHoursColumn'), settings.get('Diary', 'ChargedHoursColumn')])
-        date_column_indexes = get_indexes_from_list(diary_headers, [settings.get('Diary', 'DateColumn')])
+        time_column_indexes = get_indexes_from_list(diary_headers, [settings.get('DiaryColumns', 'StartColumn'), settings.get('DiaryColumns', 'EndColumn'), settings.get('DiaryColumns', 'TotalHoursColumn'), settings.get('DiaryColumns', 'ChargedHoursColumn')])
+        date_column_indexes = get_indexes_from_list(diary_headers, [settings.get('DiaryColumns', 'DateColumn')])
         parsed_diary_entries = []
         for row in diary_entries:
             parsed_values = []
@@ -142,7 +154,7 @@ def build_DiaryEntry_objects_from_excel_file(excel_filepath):
             parsed_diary_entries.append(parsed_values)
         return parsed_diary_entries
     ##### Timecodes
-    def get_parsed_timecode_entries(timecode_entries):
+    def get_parsed_timecode_entries(timecode_entries, timecode_headers):
         parsed_timecode_entries = []
         for row in timecode_entries:
             parsed_values = []
@@ -156,16 +168,119 @@ def build_DiaryEntry_objects_from_excel_file(excel_filepath):
             parsed_timecode_entries.append(parsed_values)
         return parsed_timecode_entries
 
+    # Sort the data
+    ##### Diary Entries
+    def get_sorted_parsed_diary_entries(diary_entries, diary_headers):
+        sort_order_indexes = get_indexes_from_list(
+            diary_headers, [
+                settings.get('DiaryColumns', 'DateColumn'), 
+                settings.get('DiaryColumns', 'WeekColumn'), 
+                settings.get('DiaryColumns', 'StartColumn'), 
+                settings.get('DiaryColumns', 'EndColumn'), 
+                settings.get('DiaryColumns', 'TimecodeKeyColumn'),
+                settings.get('DiaryColumns', 'ActivityColumn'),
+                settings.get('DiaryColumns', 'TotalHoursColumn'),
+
+                settings.get('DiaryColumns', 'ActualDateColumn'),
+                settings.get('DiaryColumns', 'ActualstartColumn'),
+                settings.get('DiaryColumns', 'ActualEndColumn'),
+                settings.get('DiaryColumns', 'ActualWorkedHoursColumn'),
+
+                settings.get('DiaryColumns', 'IsDebColumn'),
+                settings.get('DiaryColumns', 'ChargedHoursColumn'),
+
+                settings.get('DiaryColumns', 'LeftThisWeekColumn'),
+                settings.get('DiaryColumns', 'HoursColumn'),
+                settings.get('DiaryColumns', 'MinutesColumn'),
+
+                settings.get('DiaryColumns', 'TagColumn'),
+                settings.get('DiaryColumns', 'DescriptionColumn')
+            ])
+
+        sorted_parsed_diary_entries = []
+        for diary_entry in diary_entries:
+            sorted_entry = []
+            for sort_order_index in sort_order_indexes:
+                sorted_entry.append(diary_entry[sort_order_index])
+            sorted_parsed_diary_entries.append(sorted_entry)
+
+        return sorted_parsed_diary_entries
+
+    ##### Timecodes
+    def get_sorted_parsed_timecode_entries(timecode_entries, timecode_headers):
+        sort_order_indexes = get_indexes_from_list(
+            timecode_headers, [
+                settings.get('TimecodeColumns', 'KeyColumn'),
+                settings.get('TimecodeColumns', 'TimecodeColumn'), 
+                settings.get('TimecodeColumns', 'TaskColumn'), 
+                settings.get('TimecodeColumns', 'TypeColumn'),
+
+                settings.get('TimecodeColumns', 'CustomerColumn'),
+
+                settings.get('TimecodeColumns', 'TimeAvailableColumn'), 
+                settings.get('TimecodeColumns', 'TimeSpentColumn')
+            ])
+        
+        sorted_parsed_timecode_entries = []
+        for timecode_entry in timecode_entries:
+            sorted_entry = []
+            for sort_order_index in sort_order_indexes:
+                sorted_entry.append(timecode_entry[sort_order_index])
+            sorted_parsed_timecode_entries.append(sorted_entry)
+        
+        return sorted_parsed_timecode_entries
+
     # Build DiaryEntry objects with attached Timecode objects
     def build_DiaryEntry_objects(parsed_diary_entries_from_excel, parsed_timeCodes_from_excel):
         diaryEntries = []
         ##### Create DiaryEntry objects using the filtered data
         for parsed_diary_entry_from_excel in parsed_diary_entries_from_excel:
-            diaryEntries.append(DiaryEntry(*parsed_diary_entry_from_excel))
+            diaryEntry = DiaryEntry(
+                parsed_diary_entry_from_excel[0], 
+                parsed_diary_entry_from_excel[1], 
+                parsed_diary_entry_from_excel[2], 
+                parsed_diary_entry_from_excel[3], 
+                parsed_diary_entry_from_excel[4], 
+                parsed_diary_entry_from_excel[5],
+                parsed_diary_entry_from_excel[6]
+            )
+            diaryEntry.set_faktiskt_datum(
+                parsed_diary_entry_from_excel[7], 
+                parsed_diary_entry_from_excel[8], 
+                parsed_diary_entry_from_excel[9], 
+                parsed_diary_entry_from_excel[10]
+            )
+            diaryEntry.set_deb(
+                parsed_diary_entry_from_excel[11], 
+                parsed_diary_entry_from_excel[12]
+            )
+            diaryEntry.set_calculations( 
+                parsed_diary_entry_from_excel[13], 
+                parsed_diary_entry_from_excel[14], 
+                parsed_diary_entry_from_excel[15]
+            )
+            diaryEntry.set_descriptions(
+                parsed_diary_entry_from_excel[16], 
+                parsed_diary_entry_from_excel[17]
+            )
+            diaryEntries.append(diaryEntry)
         ##### Create Timecode objects using the filtered data
         timecodes = []
         for parsed_timeCode_from_excel in parsed_timeCodes_from_excel:
-            timecodes.append(Timecode(*parsed_timeCode_from_excel))
+            timecode = Timecode(
+                parsed_timeCode_from_excel[0],
+                parsed_timeCode_from_excel[1],
+                parsed_timeCode_from_excel[2],
+                parsed_timeCode_from_excel[3]
+            )
+            timecode.set_customer(
+                parsed_timeCode_from_excel[4]
+            )
+            timecode.set_time(
+                parsed_timeCode_from_excel[5],
+                parsed_timeCode_from_excel[6]
+            )
+            timecodes.append(timecode)
         ##### Attach the timecode objects to the DiaryEntry objects
         for diaryEntry in diaryEntries:
             for timecode in timecodes:
@@ -177,16 +292,22 @@ def build_DiaryEntry_objects_from_excel_file(excel_filepath):
 
     diary_entries_for_all_years = {}
     for year in get_years_from_sheets():
-        sheet_name_for_year = "{0} {1}".format(settings.get('Diary', 'DiarySheetPrefix'), year)
-        diary_entries_for_all_years[year] = build_DiaryEntry_objects(
-            get_parsed_diary_entries(
-                get_entries_from_sheet(sheet_name_for_year), 
-                get_headers_from_sheet(sheet_name_for_year)
-            ),
-            get_parsed_timecode_entries(
-                get_entries_from_sheet(settings.get('Diary', 'TimecodeSheetName')) 
-            )
-        )
+        # Get entries from sheet -> parse -> sort
+        ##### Diary
+        diary_sheet_name_for_year = "{0} {1}".format(settings.get('Diary', 'DiarySheetPrefix'), year)
+        diary_entries_from_sheet = get_entries_from_sheet(diary_sheet_name_for_year)
+        diary_headers_from_sheet = get_headers_from_sheet(diary_sheet_name_for_year)
+        parsed_diary_entries = get_parsed_diary_entries(diary_entries_from_sheet, diary_headers_from_sheet)
+        sorted_parsed_diary_entries = get_sorted_parsed_diary_entries(parsed_diary_entries, diary_headers_from_sheet)
+        ##### Timecodes
+        timecode_sheet_name = settings.get('Diary', 'TimecodeSheetName')
+        timecode_entries_from_sheet = get_entries_from_sheet(timecode_sheet_name)
+        timecode_headers_from_sheet = get_headers_from_sheet(timecode_sheet_name)
+        parsed_timecode_entries = get_parsed_timecode_entries(timecode_entries_from_sheet, timecode_headers_from_sheet)
+        sorted_parsed_timecode_entries = get_sorted_parsed_timecode_entries(parsed_timecode_entries, timecode_headers_from_sheet)
+        # Build diary entry objects for the year
+        diary_entries_for_all_years[year] = build_DiaryEntry_objects(sorted_parsed_diary_entries, sorted_parsed_timecode_entries)
+        # Create a directory for the year
         if diary_entries_for_all_years[year] and not os.path.exists(year):
             os.makedirs(year)
 
@@ -204,18 +325,17 @@ def write_txt_file_foreach_week_in_diary(diary_entries):
         diary_content = diary_content.rstrip('\n')
         print("Content being applied to txt template:\n{0}".format(diary_content))
         # Get the template for the file and inject the diary content
-        raise NotImplementedError("Check the file_content string below and apply how the file for each week should be printed to the each file.")
         file_content = (
-            # TODO: INSERT Beginning file content here
+
             "{0}\n"
-            # TODO: INSERT Ending file content here
+
             ).format(diary_content)
         # Write content to file
         print("Writing...")
         with open(filename, "w") as text_file:
             text_file.write(file_content)
         print("File written!")
-    
+
     for year_key in diary_entries:
         ### Get weeks
         weeks = []
@@ -259,14 +379,14 @@ def main():
     ### 2 Extract excel data to the model (The DiaryEntry and Timecode classes).
     ### 3 Compile txt files into the folder for the current year.
     ##### Create one file for each week of the current year and let the file data 
-    ##### adhere to the specific format that the company time reporting system needs for them to be imported.
+    ##### adhere to the specific format that MyTime needs for them to be imported.
     write_txt_file_foreach_week_in_diary(build_DiaryEntry_objects_from_excel_file(settings.get('Diary', 'DiaryFilename')))
     try:
         logging.debug('Destroying worker...')
         root.destroy()
     except:
         pass
-    ### 4. Prompt the user to open Time reporting url in Internet explorer.
+    ### 4. Prompt the user to open MyTime in Internet explorer
     logging.debug('Displaying prompt')
     if settings.get('OpenTimeReportingUrl', 'Active').lower() == "true":
         logging.debug('Prompt is active.')
@@ -275,3 +395,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

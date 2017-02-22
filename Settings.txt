@@ -2,11 +2,36 @@
 DiaryFilename=Dagbok.xlsx
 DiarySheetPrefix=Dagbok
 TimecodeSheetName=Timecodes
+
+[DiaryColumns]
+DateColumn=Datum
+WeekColumn=Vecka
 StartColumn=Start
 EndColumn=Slut
-TotalHoursColumn=Arbetade h
+StartColumn=Start
+TimecodeKeyColumn=Timecode nyckel
+ActivityColumn=Kommentar
+ActualDateColumn=Faktiskt Datum
+ActualstartColumn=Faktiskt Start
+ActualEndColumn=Faktiskt Slut
+ActualWorkedHoursColumn=Faktiskt Arbetade h
+IsDebColumn=Deb?
 ChargedHoursColumn=Debiterade h
-DateColumn=Datum
+LeftThisWeekColumn=Kvar
+HoursColumn=h
+MinutesColumn=m
+TotalHoursColumn=Arbetade h
+TagColumn=Tag
+DescriptionColumn=Beskrivning
+
+[TimecodeColumns]
+KeyColumn=Key
+TimecodeColumn=Timecode
+TaskColumn=Task
+TypeColumn=Type
+CustomerColumn=Kund
+TimeAvailableColumn=Time available
+TimeSpentColumn=Time spent
 
 [Export]
 FileName=Week
@@ -17,8 +42,9 @@ Message=Extracting workbook into txt files. This may take a short while...
 [OpenTimeReportingUrl]
 Active=True
 PromptTitle=Peter's Diary converter
-PromptMessage=Diary has been converted to txt files with the desired format and is ready to be imported to the target destination! Would you like to open your time reporting url in internet explorer now?
-TimeReportingUrl=https://mycompany.intranet.com/timereporting
+PromptMessage=Diary has been converted to txt format and is ready to be imported in the company time reporting system! Would you like to open the time reporting system in internet explorer now?
+TimeReportingUrl=
 
 [Logging]
 Active=False
+
