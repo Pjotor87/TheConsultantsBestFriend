@@ -386,7 +386,7 @@ def main():
         root.destroy()
     except:
         pass
-    ### 4. Prompt the user to open MyTime in Internet explorer
+    ### 4. Prompt the user to open the time reporting system in Internet explorer
     logging.debug('Displaying prompt')
     if settings.get('OpenTimeReportingUrl', 'Active').lower() == "true":
         logging.debug('Prompt is active.')
