@@ -327,7 +327,7 @@ def write_txt_file_foreach_week_in_diary(diary_entries):
         # Get the template for the file and inject the diary content
         file_content = (
 
-            "{0}\n"
+            "{0}"
 
             ).format(diary_content)
         # Write content to file
@@ -379,7 +379,7 @@ def main():
     ### 2 Extract excel data to the model (The DiaryEntry and Timecode classes).
     ### 3 Compile txt files into the folder for the current year.
     ##### Create one file for each week of the current year and let the file data 
-    ##### adhere to the specific format that MyTime needs for them to be imported.
+    ##### adhere to the specific format that the time reporting system needs for them to be imported.
     write_txt_file_foreach_week_in_diary(build_DiaryEntry_objects_from_excel_file(settings.get('Diary', 'DiaryFilename')))
     try:
         logging.debug('Destroying worker...')

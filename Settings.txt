@@ -43,7 +43,7 @@ Message=Extracting workbook into txt files. This may take a short while...
 Active=True
 PromptTitle=Peter's Diary converter
 PromptMessage=Diary has been converted to txt format and is ready to be imported in the company time reporting system! Would you like to open the time reporting system in internet explorer now?
-TimeReportingUrl=
+TimeReportingUrl=http://www.google.com
 
 [Logging]
 Active=False
