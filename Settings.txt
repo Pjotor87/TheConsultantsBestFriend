@@ -1,6 +1,7 @@
 [Diary]
 DiaryFilename=Dagbok.xlsx
 DiarySheetPrefix=Dagbok
+VacationSheetPrefix=Semester
 TimecodeSheetName=Timecodes
 
 [DiaryColumns]

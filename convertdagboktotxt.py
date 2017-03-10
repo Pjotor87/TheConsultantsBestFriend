@@ -231,10 +231,43 @@ def build_DiaryEntry_objects_from_excel_file(excel_filepath):
         return sorted_parsed_timecode_entries
 
     # Build DiaryEntry objects with attached Timecode objects
-    def build_DiaryEntry_objects(parsed_diary_entries_from_excel, parsed_timeCodes_from_excel):
+    def build_DiaryEntry_objects(parsed_diary_entries_from_excel, parsed_vacation_entries_from_excel, parsed_timeCodes_from_excel):
         diaryEntries = []
         ##### Create DiaryEntry objects using the filtered data
+        ########## Diary
         for parsed_diary_entry_from_excel in parsed_diary_entries_from_excel:
+            diaryEntry = DiaryEntry(
+                parsed_diary_entry_from_excel[0], 
+                parsed_diary_entry_from_excel[1], 
+                parsed_diary_entry_from_excel[2], 
+                parsed_diary_entry_from_excel[3], 
+                parsed_diary_entry_from_excel[4], 
+                parsed_diary_entry_from_excel[5],
+                parsed_diary_entry_from_excel[6]
+            )
+            diaryEntry.set_faktiskt_datum(
+                parsed_diary_entry_from_excel[7], 
+                parsed_diary_entry_from_excel[8], 
+                parsed_diary_entry_from_excel[9], 
+                parsed_diary_entry_from_excel[10]
+            )
+            diaryEntry.set_deb(
+                parsed_diary_entry_from_excel[11], 
+                parsed_diary_entry_from_excel[12]
+            )
+            diaryEntry.set_calculations( 
+                parsed_diary_entry_from_excel[13], 
+                parsed_diary_entry_from_excel[14], 
+                parsed_diary_entry_from_excel[15]
+            )
+            diaryEntry.set_descriptions(
+                parsed_diary_entry_from_excel[16], 
+                parsed_diary_entry_from_excel[17]
+            )
+            diaryEntries.append(diaryEntry)
+        ##### Create DiaryEntry objects using the filtered data
+        ########## Vacation
+        for parsed_diary_entry_from_excel in parsed_vacation_entries_from_excel:
             diaryEntry = DiaryEntry(
                 parsed_diary_entry_from_excel[0], 
                 parsed_diary_entry_from_excel[1], 
@@ -299,6 +332,12 @@ def build_DiaryEntry_objects_from_excel_file(excel_filepath):
         diary_headers_from_sheet = get_headers_from_sheet(diary_sheet_name_for_year)
         parsed_diary_entries = get_parsed_diary_entries(diary_entries_from_sheet, diary_headers_from_sheet)
         sorted_parsed_diary_entries = get_sorted_parsed_diary_entries(parsed_diary_entries, diary_headers_from_sheet)
+        ##### Vacation
+        vacation_sheet_name_for_year = "{0} {1}".format(settings.get('Diary', 'VacationSheetPrefix'), year)
+        vacation_entries_from_sheet = get_entries_from_sheet(vacation_sheet_name_for_year)
+        vacation_headers_from_sheet = get_headers_from_sheet(vacation_sheet_name_for_year)
+        parsed_vacation_entries = get_parsed_diary_entries(vacation_entries_from_sheet, vacation_headers_from_sheet)
+        sorted_parsed_vacation_entries = get_sorted_parsed_diary_entries(parsed_vacation_entries, vacation_headers_from_sheet)
         ##### Timecodes
         timecode_sheet_name = settings.get('Diary', 'TimecodeSheetName')
         timecode_entries_from_sheet = get_entries_from_sheet(timecode_sheet_name)
@@ -306,7 +345,7 @@ def build_DiaryEntry_objects_from_excel_file(excel_filepath):
         parsed_timecode_entries = get_parsed_timecode_entries(timecode_entries_from_sheet, timecode_headers_from_sheet)
         sorted_parsed_timecode_entries = get_sorted_parsed_timecode_entries(parsed_timecode_entries, timecode_headers_from_sheet)
         # Build diary entry objects for the year
-        diary_entries_for_all_years[year] = build_DiaryEntry_objects(sorted_parsed_diary_entries, sorted_parsed_timecode_entries)
+        diary_entries_for_all_years[year] = build_DiaryEntry_objects(sorted_parsed_diary_entries, sorted_parsed_vacation_entries, sorted_parsed_timecode_entries)
         # Create a directory for the year
         if diary_entries_for_all_years[year] and not os.path.exists(year):
             os.makedirs(year)
